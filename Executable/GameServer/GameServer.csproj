@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{69FBBD11-0C67-47D6-B1E3-878C2CBC8616}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>GameServer</RootNamespace>
+    <AssemblyName>GameServer</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FluentScheduler, Version=5.3.0.0, Culture=neutral, PublicKeyToken=b76503528a14ebd1, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\FluentScheduler.5.3.0\lib\net40\FluentScheduler.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="RakNetDotNet, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ReferenceLibrary\RakNetDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpCompress, Version=0.23.0.0, Culture=neutral, PublicKeyToken=afb0a02973931d96, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SharpCompress.0.23.0\lib\net45\SharpCompress.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Game\FieldMap\Component\FMComponent.cs" />
+    <Compile Include="Game\FieldMap\Component\FMC_FieldObjectManager.cs" />
+    <Compile Include="Game\FieldMap\FieldMap.cs" />
+    <Compile Include="Game\FieldMap\FieldMap_Component.cs" />
+    <Compile Include="Game\FieldMap\FieldMap_Factory.cs" />
+    <Compile Include="Game\FieldMap\Script\FieldMapScript.cs" />
+    <Compile Include="Game\FieldObject\Component\FOComponent.cs" />
+    <Compile Include="Game\FieldObject\Component\FOC_BuffInventory.cs" />
+    <Compile Include="Game\FieldObject\Component\FOC_FiniteStateMachine.cs" />
+    <Compile Include="Game\FieldObject\Component\FOC_Synchronization.cs" />
+    <Compile Include="Game\FieldObject\FieldObject.cs" />
+    <Compile Include="Game\FieldObject\FieldObject_Component.cs" />
+    <Compile Include="Game\FieldObject\FieldObject_Factory.cs" />
+    <Compile Include="Game\FieldObject\FieldObject_Move.cs" />
+    <Compile Include="Game\FieldObject\Util\FSM.cs" />
+    <Compile Include="Game\NonFieldObject\Component\NFOComponent.cs" />
+    <Compile Include="Game\User.cs" />
+    <Compile Include="Manager\SessionMgr.cs" />
+    <Compile Include="Game\Message\Message.cs" />
+    <Compile Include="Game\Message\MSGID.cs">
+      <DependentUpon>MSGID.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Manager\UserMgr.cs" />
+    <Compile Include="Net\S2S\S2SClient.cs" />
+    <Compile Include="Net\Server.cs" />
+    <Compile Include="Net\Session\ClientSession.cs" />
+    <Compile Include="Game\NonFieldObject\NonFIeldObject.cs" />
+    <Compile Include="Game\NonFieldObject\NonFIeldObject_Component.cs" />
+    <Compile Include="Game\NonFieldObject\NonFieldObject_Factory.cs" />
+    <Compile Include="Net\Packet\CS_Packet\PacketHandler_CS.cs" />
+    <Compile Include="Net\Packet\S2S_Packet\PacketHandler_S2G.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scheduler\Job_BattleInfo.cs" />
+    <Compile Include="Scheduler\Schedule_BattleInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="log4net.config" />
+    <None Include="packages.config" />
+    <None Include="ServerConfig.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\CommonLib\DBLib\DBLib\DBLib.csproj">
+      <Project>{6FEEC144-9C6F-43C2-9E91-B54CC687ABFC}</Project>
+      <Name>DBLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CommonLib\GameCommon\GameCommon.csproj">
+      <Project>{613CC06A-8299-40AC-8ABB-275B6EEC34E6}</Project>
+      <Name>GameCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CommonLib\NetLib\NetLib.csproj">
+      <Project>{24487088-33AB-46D9-A30D-C866A8F6F464}</Project>
+      <Name>NetLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CommonLib\PacketLib.ZeroFormatter\PacketLib.ZeroFormatter.csproj">
+      <Project>{5e241e6e-05b5-4f6b-a043-f1807eb24539}</Project>
+      <Name>PacketLib.ZeroFormatter</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CommonLib\PacketLib\PacketLib.csproj">
+      <Project>{aba56f5d-8b39-4a03-83da-11762ae5a139}</Project>
+      <Name>PacketLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CommonLib\UtilLib\UtilLib.csproj">
+      <Project>{377BA666-E71C-4B06-AACB-11318AD20AD3}</Project>
+      <Name>UtilLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CommonLib_Server\ServerUtilLib\ServerUtilLib.csproj">
+      <Project>{18735262-f3f7-4457-b5d7-8e50802247ee}</Project>
+      <Name>ServerUtilLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CommonLib\EntityService\EntityService.csproj">
+      <Project>{7A31C83D-CEBC-443B-BB3C-B00AD6984EAB}</Project>
+      <Name>EntityService</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Game\Message\MSGID.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>MSGID.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Game\Login\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /i /y $(SolutionDir)ReferenceLibrary\RakNet.dll $(TargetDir)
+copy /Y "$(ProjectDir)log4net.config" "$(TargetDir)"
+copy /Y "$(ProjectDir)ServerConfig.json" "$(TargetDir)"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>set TTDir="C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\textTransform.exe"
+set TTGenSrc="$(ProjectDir)Game\Message\MSGID.cs
+%25TTDir%25 "$(ProjectDir)Game\Message\MSGID.tt" -out %25TTGenSrc%25</PreBuildEvent>
+  </PropertyGroup>
+</Project>

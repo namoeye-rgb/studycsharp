@@ -1,0 +1,76 @@
+{
+	"datas": [
+		{
+			"type": 1,
+			"agi": 3,
+			"hp": 1,
+			"def": 2,
+			"atk": 2,
+			"grade": 1
+		},
+		{
+			"type": 1,
+			"agi": 4,
+			"hp": 2,
+			"def": 2,
+			"atk": 3,
+			"grade": 2
+		},
+		{
+			"type": 1,
+			"agi": 5,
+			"hp": 3,
+			"def": 2,
+			"atk": 4,
+			"grade": 3
+		},
+		{
+			"type": 2,
+			"agi": 1,
+			"hp": 2,
+			"def": 3,
+			"atk": 4,
+			"grade": 1
+		},
+		{
+			"type": 2,
+			"agi": 2,
+			"hp": 3,
+			"def": 3,
+			"atk": 5,
+			"grade": 2
+		},
+		{
+			"type": 2,
+			"agi": 3,
+			"hp": 4,
+			"def": 3,
+			"atk": 6,
+			"grade": 3
+		},
+		{
+			"type": 3,
+			"agi": 2,
+			"hp": 1,
+			"def": 1,
+			"atk": 1,
+			"grade": 1
+		},
+		{
+			"type": 3,
+			"agi": 3,
+			"hp": 2,
+			"def": 1,
+			"atk": 2,
+			"grade": 2
+		},
+		{
+			"type": 3,
+			"agi": 4,
+			"hp": 3,
+			"def": 1,
+			"atk": 3,
+			"grade": 3
+		}
+	]
+}

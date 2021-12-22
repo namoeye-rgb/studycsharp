@@ -1,0 +1,25 @@
+﻿{
+  "ServerType": "GAME",
+  "Port": 5000,
+  "ConnectionInfo": [
+    {
+      "ServerType": "GAME",
+      "ip": "127.0.0.1",
+      "port": 6000
+    }
+  ],
+  "ListenInfo": [
+    {
+      "ServerType": "MATCHING",
+      "ip": "127.0.0.1",
+      "port": 9000,
+      "MaxConnection": 5000,
+      "ServerIndex": 1
+    }
+  ],
+
+  "DBInfo":{
+	"ConnectionUrl" :"mongodb://127.0.0.1",
+	"Port" :"27017"
+  }
+}

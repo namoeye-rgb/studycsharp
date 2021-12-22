@@ -1,0 +1,112 @@
+{
+	"datas": [
+		{
+			"idx": 1000001,
+			"name": "리진형",
+			"range": 3,
+			"move": 2,
+			"agi": 3,
+			"hp": 3,
+			"def": 1,
+			"atk": 2,
+			"grade": 1,
+			"type": 1
+		},
+		{
+			"idx": 2000001,
+			"name": "리진형",
+			"range": 3,
+			"move": 3,
+			"agi": 4,
+			"hp": 4,
+			"def": 2,
+			"atk": 3,
+			"grade": 2,
+			"type": 1
+		},
+		{
+			"idx": 3000001,
+			"name": "리진형",
+			"range": 3,
+			"move": 4,
+			"agi": 5,
+			"hp": 5,
+			"def": 3,
+			"atk": 4,
+			"grade": 3,
+			"type": 1
+		},
+		{
+			"idx": 1000002,
+			"name": "락현",
+			"range": 1,
+			"move": 1,
+			"agi": 1,
+			"hp": 5,
+			"def": 3,
+			"atk": 4,
+			"grade": 1,
+			"type": 2
+		},
+		{
+			"idx": 2000002,
+			"name": "락현",
+			"range": 1,
+			"move": 2,
+			"agi": 2,
+			"hp": 6,
+			"def": 4,
+			"atk": 5,
+			"grade": 2,
+			"type": 2
+		},
+		{
+			"idx": 3000002,
+			"name": "락현",
+			"range": 1,
+			"move": 3,
+			"agi": 3,
+			"hp": 7,
+			"def": 5,
+			"atk": 6,
+			"grade": 3,
+			"type": 2
+		},
+		{
+			"idx": 1000003,
+			"name": "You",
+			"range": 2,
+			"move": 1,
+			"agi": 3,
+			"hp": 3,
+			"def": 1,
+			"atk": 1,
+			"grade": 1,
+			"type": 3
+		},
+		{
+			"idx": 2000003,
+			"name": "You",
+			"range": 2,
+			"move": 2,
+			"agi": 4,
+			"hp": 4,
+			"def": 2,
+			"atk": 2,
+			"grade": 2,
+			"type": 3
+		},
+		{
+			"idx": 3000003,
+			"name": "You",
+			"range": 2,
+			"move": 3,
+			"agi": 5,
+			"hp": 5,
+			"def": 3,
+			"atk": 3,
+			"grade": 3,
+			"type": 3
+		}
+	]
+}

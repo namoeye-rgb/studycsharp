@@ -1,0 +1,18 @@
+﻿{
+  "ServerType": "GAME",
+  "Port": 5000,
+  "MaxConnection": 5000,
+  "ServerId":100,
+  "ConnectionInfo": [
+    {
+      "ServerType": "SYNC",
+      "Ip": "127.0.0.1",
+      "Port": 6000
+    }
+  ],
+  "ListenInfo":
+    {
+      "Port": 6000,
+      "MaxConnection": 10
+    }
+}

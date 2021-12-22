@@ -1,0 +1,18 @@
+﻿{
+  "ServerType": "LOBBY",
+  "Port": 4000,
+  "MaxConnection": 5000,
+  "ServerId":1,
+  "ConnectionInfo": [
+    {
+      "ServerType": "SYNC",
+      "Ip": "127.0.0.1",
+      "Port": 6000
+    }
+  ],
+
+  "DBInfo":{
+	"ConnectionUrl" :"mongodb://127.0.0.1",
+	"Port" :"27017"
+  }
+}
