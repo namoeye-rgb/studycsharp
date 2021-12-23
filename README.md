@@ -1,7 +1,7 @@
 ## C# 개인작업(상업적 용도 X)🌱
 
 
-[![Build Status](https://img.shields.io/badge/build-fail-red)]
+![Build Status](https://img.shields.io/badge/build-fail-red)
 <img src="https://img.shields.io/badge/.Net-FEFEFE?style=plastic&logo=.Net&logoColor=4285F4"/></a>
 <img src="https://img.shields.io/badge/MySQL-FEFEFE?style=plastic&logo=MySQL&logoColor=4479A1"/></a>
 
