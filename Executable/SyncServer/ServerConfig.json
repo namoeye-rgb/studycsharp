@@ -1,5 +1,0 @@
-﻿{
-  "ServerType": "SYNC",
-  "Port": 6000,
-  "MaxConnection": 10,
-}

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.19.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="PacketData\" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="del /q $(SolutionDir)PacketLib_Core\PacketData\&#xD;&#xA;$(SolutionDir)protoc-3.19.1\bin\protoc.exe -I=$(SolutionDir)PacketLib_Core\Proto\ --csharp_out=$(SolutionDir)PacketLib_Core\PacketData\ $(SolutionDir)PacketLib_Core\Proto\*" />
+  </Target>
+
+</Project>
