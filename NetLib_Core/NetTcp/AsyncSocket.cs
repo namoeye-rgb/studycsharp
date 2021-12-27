@@ -13,7 +13,7 @@ namespace NetLib
 
         public volatile SocketError SocketState;
 
-        public delegate void NewClient_CallBack(SocketAsyncEventArgs e);
+        public delegate void AcceptClient_CallBack(SocketAsyncEventArgs e);
         public delegate void ServerConnect_CallBack(SocketAsyncEventArgs e);
         public delegate void ReceiveComplete_CallBack(SocketAsyncEventArgs e);
         public delegate void SendComplete_CallBack(SocketAsyncEventArgs e);
@@ -21,7 +21,7 @@ namespace NetLib
         public ServerConnect_CallBack ConnectServer;
         public ReceiveComplete_CallBack ReceiveComplete;
         public SendComplete_CallBack SendComplete;
-        public NewClient_CallBack AcceptClient;
+        public AcceptClient_CallBack AcceptClient;
 
         public void ReceiveAsync(object sender, SocketAsyncEventArgs e)
         {

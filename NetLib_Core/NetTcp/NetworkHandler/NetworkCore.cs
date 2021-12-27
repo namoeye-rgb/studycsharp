@@ -1,23 +1,23 @@
 ﻿using NetLib.Token;
+using System;
 using System.Net.Sockets;
 using System.Threading;
 
 namespace NetLib
 {
-    public enum NETCLIENT_TYPE
+    public enum NET_TYPE
     {
-        CS = 1,
-        S2S = 1,
+        Client,
+        Server,
     }
 
-    public partial class NetworkHandler
+    public partial class NetworkCore
     {
         private INetLogger logger;
-
-        public NETCLIENT_TYPE NetClientType;
+        public NET_TYPE NetType { get; }
 
         //Common
-        private AsyncSocket netWork;
+        private AsyncSocket socket;
 
         //Client
         private NetToken netToken;
@@ -36,49 +36,56 @@ namespace NetLib
         public OnReceive_CallBack OnReceive;
         public OnDisConnect_CallBack OnDisConnect;
 
-        public NetworkHandler(INetLogger _logger, NETCLIENT_TYPE _type)
+        public NetworkCore(NET_TYPE _type, INetLogger _logger = null)
         {
+            socket = new AsyncSocket();
+            NetType = _type;
             logger = _logger;
-            netWork = new AsyncSocket();
-            NetClientType = _type;
         }
 
-        public NetworkHandler(NETCLIENT_TYPE _type)
-        {
-            netWork = new AsyncSocket();
-            NetClientType = _type;
-        }
 
-        public void Start_Server(int _port, int _maxConnection)
+        public void Init_Server(int _maxConnection,
+            OnAccept_CallBack OnAcceptFunc,
+            OnReceive_CallBack OnReceiveFunc,
+            OnConnect_CallBack onConnectFunc,
+            OnDisConnect_CallBack onDisConnect)
         {
             //서버에만 풀을 생성해두기 위한것
             InitializePool(_maxConnection);
+            socket.AcceptClient = AddClient;
+            socket.ReceiveComplete = ReceiveComplete;
+            socket.SendComplete = SendComplete;
 
-            netWork.AcceptClient = AddClient;
-            netWork.ReceiveComplete = ReceiveComplete;
-            netWork.SendComplete = SendComplete;
-            netWork.StartServer(_port, _maxConnection);
+            OnAccept += OnAcceptFunc;
+            OnReceive += OnReceiveFunc;
+            OnConnect += onConnectFunc;
+            OnDisConnect += onDisConnect;
+        }
+
+        public void Start_Server(int _port, int _listenCount = 1000)
+        {
+            socket.StartServer(_port, _listenCount);
         }
 
         public void Init_Client()
         {
-            netWork.ConnectServer = ConnectServer;
-            netWork.ReceiveComplete = ReceiveComplete;
-            netWork.SendComplete = SendComplete;
+            socket.ConnectServer = ConnectServer;
+            socket.ReceiveComplete = ReceiveComplete;
+            socket.SendComplete = SendComplete;
         }
         public void Start_Client(string _ip, int _port, bool _isRecoonnect)
         {
-            netWork.StartClient(_ip, _port, _isRecoonnect);
+            socket.StartClient(_ip, _port, _isRecoonnect);
         }
         private void InitializePool(int _maxConnection)
         {
             bufferMgr = new BufferManager(_maxConnection * bufferSize * 2, bufferSize);
 
-            receiveEventPool = new SocketAsyncEventArgsPool(50);
-            sendEventPool = new SocketAsyncEventArgsPool(50);
+            receiveEventPool = new SocketAsyncEventArgsPool(_maxConnection);
+            sendEventPool = new SocketAsyncEventArgsPool(_maxConnection);
 
-            for (int i = 0; i < _maxConnection; ++i) {
-
+            for (int i = 0; i < _maxConnection; ++i)
+            {
                 //recive Pool
                 SocketAsyncEventArgs receive = new SocketAsyncEventArgs();
                 NetToken token = new NetToken();
@@ -86,7 +93,7 @@ namespace NetLib
                 bufferMgr.SetBuffer(receive);
 
                 receive.UserToken = token;
-                receive.Completed += netWork.ReceiveAsync;
+                receive.Completed += socket.ReceiveAsync;
                 receiveEventPool.PushPool(receive);
 
                 //send Pool
@@ -94,7 +101,7 @@ namespace NetLib
                 bufferMgr.SetBuffer(send);
 
                 send.UserToken = token;
-                send.Completed += netWork.SendAsync;
+                send.Completed += socket.SendAsync;
                 sendEventPool.PushPool(send);
             }
         }
@@ -106,11 +113,9 @@ namespace NetLib
             SocketAsyncEventArgs receiveArgs = receiveEventPool.PopPool();
             SocketAsyncEventArgs sendArgs = sendEventPool.PopPool();
 
-            //toekn에 저장해두기
             NetToken token = receiveArgs.UserToken as NetToken;
 
-            //clientList.Add(token);
-            token.Init(e.AcceptSocket, receiveArgs, sendArgs, NetClientType);
+            token.Init(e.AcceptSocket, receiveArgs, sendArgs);
 
             OnAccept?.Invoke(token);
 
@@ -118,8 +123,7 @@ namespace NetLib
             //local에는 서버 remote에는 클라의 주소가 설정된다.
             //Accept을 하면서 remote의 주소가 할당된더고
             //여기서 token을 모으는 이유는 서버에서 클라로 연결을 위함이다.
-
-            token.Ready_Receive();
+            token.Receive();
 
             logger?.Debug("Client Accept : {0}", e.AcceptSocket.RemoteEndPoint);
         }
@@ -127,27 +131,29 @@ namespace NetLib
         //클라이언트 용
         public void ConnectServer(SocketAsyncEventArgs e)
         {
-            if (e.SocketError != SocketError.Success) {
+            if (e.SocketError != SocketError.Success)
+            {
                 logger?.Warn("Fail Connect Server, SocketError : {0}, Remote EndPoint : {1}", e.SocketError, e.RemoteEndPoint);
                 Thread.Sleep(10000);
 
-                if (netWork.ReConnectClient() == false) {
+                if (socket.ReConnectClient() == false)
+                {
                     logger?.Error("Not Found Remote Connect Info");
                     return;
                 }
 
-                OnConnect?.Invoke(netWork.SocketState, null);
+                OnConnect?.Invoke(socket.SocketState, null);
 
                 return;
             }
 
             SocketAsyncEventArgs receiveArgs = new SocketAsyncEventArgs();
-            receiveArgs.Completed += netWork.ReceiveAsync;
+            receiveArgs.Completed += socket.ReceiveAsync;
             byte[] receiveBuffer = new byte[65535];
             receiveArgs.SetBuffer(receiveBuffer, 0, receiveBuffer.Length);
 
             SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs();
-            sendArgs.Completed += netWork.SendAsync;
+            sendArgs.Completed += socket.SendAsync;
             byte[] sendBuffer = new byte[65535];
             receiveArgs.SetBuffer(sendBuffer, 0, sendBuffer.Length);
 
@@ -155,29 +161,34 @@ namespace NetLib
             receiveArgs.UserToken = netToken;
             sendArgs.UserToken = netToken;
 
-            netToken.Init(netWork.Socket, receiveArgs, sendArgs, NetClientType);
-            netToken.Ready_Receive();
+            netToken.Init(socket.Socket, receiveArgs, sendArgs);
+            netToken.Receive();
 
-            OnConnect?.Invoke(netWork.SocketState, netToken);
+            OnConnect?.Invoke(socket.SocketState, netToken);
         }
 
         public void ReceiveComplete(SocketAsyncEventArgs e)
         {
             var data = e.UserToken as NetToken;
-
-            if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success) {
-                if (OnReceive == null) {
+            if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
+            {
+                if (OnReceive == null)
+                {
+                    logger?.Error("error not found OnReceive Func");                    
                     return;
                 }
 
-                var outputStream = data.ReceivePacket();
+                var outputStream = data.ReceiveStream();
 
-                if (outputStream != null) {
+                if (outputStream != null)
+                {
                     OnReceive?.Invoke(data.GetUserToken(), outputStream.GetBuffer());
                 }
 
-                data.Ready_Receive();
-            } else {
+                data.Receive();
+            }
+            else
+            {
                 OnDisConnect?.Invoke(data);
             }
         }
@@ -213,11 +224,12 @@ namespace NetLib
 
         public SocketError GetSocketState()
         {
-            if (netWork == null) {
+            if (socket == null)
+            {
                 return SocketError.SocketError;
             }
 
-            return netWork.SocketState;
+            return socket.SocketState;
         }
     }
 }

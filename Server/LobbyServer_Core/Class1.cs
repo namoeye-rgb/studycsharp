@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Google.Protobuf.Examples.AddressBook;
+using System;
 
 namespace LobbyServer_Core
 {
-    public class Class1
-    {
-    }
+
 }
