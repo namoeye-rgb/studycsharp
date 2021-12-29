@@ -21,7 +21,7 @@ namespace NetLib
 
         //Client
         private NetToken netToken;
-        private int bufferSize = 1024;
+        private int bufferSize = 10;
         private BufferManager bufferMgr;
         private SocketAsyncEventArgsPool receiveEventPool;
         private SocketAsyncEventArgsPool sendEventPool;
@@ -178,7 +178,7 @@ namespace NetLib
 
         private void ReceiveComplete(SocketAsyncEventArgs e)
         {
-            var data = e.UserToken as NetToken;
+            var netToken = e.UserToken as NetToken;
             if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
             {
                 if (OnReceive == null)
@@ -187,21 +187,20 @@ namespace NetLib
                     return;
                 }
 
-                var outputStream = data.GetStream();
-                if (outputStream != null)
+                netToken.ReceiveByteBuffer((token, bytes) =>
                 {
-                    OnReceive?.Invoke(data.GetUserToken(), outputStream.GetBuffer());
-                }
+                    OnReceive?.Invoke(token, bytes);
+                }, e);
 
-                if (data.Receive() == false)
+                if (netToken.Receive() == false)
                 {
-                    OnDisConnect?.Invoke(data);
+                    OnDisConnect?.Invoke(netToken);
                     return;
                 }
             }
             else
             {
-                OnDisConnect?.Invoke(data);
+                OnDisConnect?.Invoke(netToken);
             }
         }
 
