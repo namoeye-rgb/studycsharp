@@ -4,4 +4,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PacketLib_Core\PacketLib_Core.csproj" />
+  </ItemGroup>
+
 </Project>

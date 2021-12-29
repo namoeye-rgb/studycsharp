@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PacketLib_Core;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
@@ -13,7 +14,7 @@ namespace NetLib.Token
         private Queue<byte[]> sendQueue = new Queue<byte[]>();
         private object sendQueueObj = new object();
         private IUserToken userToken;
-
+        private PacketHandler packetHandler;
 
         public Socket Socket
         {
@@ -44,6 +45,8 @@ namespace NetLib.Token
             this.asyncSocket = socket;
             receiveArgs = receive;
             sendArgs = send;
+
+            packetHandler = new PacketHandler(receive.Buffer.Length);
         }
 
         public void Close()
@@ -79,14 +82,11 @@ namespace NetLib.Token
             }
         }
 
-        public MemoryStream ReceiveStream()
+        public MemoryStream GetStream()
         {
-            //if (messageResolver.ReceivePacket(receiveArgs.Buffer, receiveArgs.Offset, receiveArgs.BytesTransferred, out MemoryStream outputStream))
-            //{
-            //    return outputStream;
-            //}
+            packetHandler.ReceiveByte(receiveArgs.Buffer, receiveArgs.Offset, receiveArgs.BytesTransferred, out MemoryStream outputStream);
 
-            return null;
+            return outputStream;
         }
 
         //Send Packet
@@ -116,7 +116,8 @@ namespace NetLib.Token
             lock (sendQueueObj)
             {
                 var data = sendQueue.Peek();
-                sendArgs.SetBuffer(data, 0, data.Length);
+                sendArgs.SetBuffer(sendArgs.Offset, data.Length);
+                Array.Copy(data, 0, sendArgs.Buffer, sendArgs.Offset, data.Length);
 
                 asyncSocket.SendAsync(sendArgs);
             }

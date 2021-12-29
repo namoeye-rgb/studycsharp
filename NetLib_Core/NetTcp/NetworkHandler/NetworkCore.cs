@@ -84,7 +84,7 @@ namespace NetLib
         }
         private void InitializePool(int maxConnection)
         {
-            bufferMgr = new BufferManager(maxConnection * bufferSize * 2, bufferSize);
+            bufferMgr = new BufferManager((maxConnection * bufferSize) * 2, bufferSize);
 
             receiveEventPool = new SocketAsyncEventArgsPool(maxConnection);
             sendEventPool = new SocketAsyncEventArgsPool(maxConnection);
@@ -95,7 +95,6 @@ namespace NetLib
                 //recive Pool
                 SocketAsyncEventArgs receive = new SocketAsyncEventArgs();
                 bufferMgr.SetBuffer(receive);
-
                 receive.UserToken = token;
                 receive.Completed += asyncSocket.ReceiveComplete;
                 receiveEventPool.PushPool(receive);
@@ -103,7 +102,6 @@ namespace NetLib
                 //send Pool
                 SocketAsyncEventArgs send = new SocketAsyncEventArgs();
                 bufferMgr.SetBuffer(send);
-
                 send.UserToken = token;
                 send.Completed += asyncSocket.SendCompate;
                 sendEventPool.PushPool(send);
@@ -158,6 +156,7 @@ namespace NetLib
                 SocketAsyncEventArgs args = new SocketAsyncEventArgs();
                 byte[] buffer = new byte[bufferSize];
                 args.SetBuffer(buffer, 0, buffer.Length);
+
                 return args;
             };
 
@@ -188,7 +187,7 @@ namespace NetLib
                     return;
                 }
 
-                var outputStream = data.ReceiveStream();
+                var outputStream = data.GetStream();
                 if (outputStream != null)
                 {
                     OnReceive?.Invoke(data.GetUserToken(), outputStream.GetBuffer());
