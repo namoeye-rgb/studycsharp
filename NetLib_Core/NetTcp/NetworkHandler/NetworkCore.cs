@@ -17,83 +17,87 @@ namespace NetLib
         public NET_TYPE NetType { get; }
 
         //Common
-        private AsyncSocket socket;
+        private AsyncSocket asyncSocket;
 
         //Client
         private NetToken netToken;
-        private int bufferSize = 65535;
+        private int bufferSize = 1024;
         private BufferManager bufferMgr;
         private SocketAsyncEventArgsPool receiveEventPool;
         private SocketAsyncEventArgsPool sendEventPool;
 
-        public delegate void OnAccept_CallBack(NetToken _netToken);
-        public delegate void OnReceive_CallBack(IUserToken _userToken, byte[] _buffer);
-        public delegate void OnConnect_CallBack(SocketError _socketState, NetToken _netToken);
-        public delegate void OnDisConnect_CallBack(NetToken _netToken);
+        public delegate void OnAccept_CallBack(NetToken netToken);
+        public delegate void OnReceive_CallBack(IUserToken userToken, byte[] buffer);
+        public delegate void OnConnect_CallBack(SocketError socketState, NetToken netToken);
+        public delegate void OnDisConnect_CallBack(NetToken netToken);
 
         public OnAccept_CallBack OnAccept;
         public OnConnect_CallBack OnConnect;
         public OnReceive_CallBack OnReceive;
         public OnDisConnect_CallBack OnDisConnect;
 
-        public NetworkCore(NET_TYPE _type, INetLogger _logger = null)
+        public NetworkCore(NET_TYPE type, INetLogger logger = null)
         {
-            socket = new AsyncSocket();
-            NetType = _type;
-            logger = _logger;
+            asyncSocket = new AsyncSocket();
+            NetType = type;
+            this.logger = logger;
         }
 
 
-        public void Init_Server(int _maxConnection,
-            OnAccept_CallBack OnAcceptFunc,
-            OnReceive_CallBack OnReceiveFunc,
+        public void Init_Server(int maxConnection,
+            OnAccept_CallBack onAcceptFunc,
             OnConnect_CallBack onConnectFunc,
+            OnReceive_CallBack onReceiveFunc,
             OnDisConnect_CallBack onDisConnect)
         {
             //서버에만 풀을 생성해두기 위한것
-            InitializePool(_maxConnection);
-            socket.AcceptClient = AddClient;
-            socket.ReceiveComplete = ReceiveComplete;
-            socket.SendComplete = SendComplete;
+            InitializePool(maxConnection);
+            asyncSocket.AcceptClientCallback = AddClient;
+            asyncSocket.ReceiveCompleteCallback = ReceiveComplete;
+            asyncSocket.SendCompleteCallback = SendComplete;
 
-            OnAccept += OnAcceptFunc;
-            OnReceive += OnReceiveFunc;
+            OnAccept += onAcceptFunc;
+            OnReceive += onReceiveFunc;
             OnConnect += onConnectFunc;
             OnDisConnect += onDisConnect;
         }
 
-        public void Start_Server(int _port, int _listenCount = 1000)
+        public void Start_Server(int port, int listenCount = 1000)
         {
-            socket.StartServer(_port, _listenCount);
+            asyncSocket.StartServer(port, listenCount);
         }
 
-        public void Init_Client()
+        public void Init_Client(OnConnect_CallBack onConnectFunc, OnReceive_CallBack onReceiveFunc, OnDisConnect_CallBack onDisConnect)
         {
-            socket.ConnectServer = ConnectServer;
-            socket.ReceiveComplete = ReceiveComplete;
-            socket.SendComplete = SendComplete;
-        }
-        public void Start_Client(string _ip, int _port, bool _isRecoonnect)
-        {
-            socket.StartClient(_ip, _port, _isRecoonnect);
-        }
-        private void InitializePool(int _maxConnection)
-        {
-            bufferMgr = new BufferManager(_maxConnection * bufferSize * 2, bufferSize);
+            asyncSocket.ServerConnectCallback = ConnectServer;
+            asyncSocket.ReceiveCompleteCallback = ReceiveComplete;
+            asyncSocket.SendCompleteCallback = SendComplete;
 
-            receiveEventPool = new SocketAsyncEventArgsPool(_maxConnection);
-            sendEventPool = new SocketAsyncEventArgsPool(_maxConnection);
+            OnReceive += onReceiveFunc;
+            OnConnect += onConnectFunc;
+            OnDisConnect += onDisConnect;
 
-            for (int i = 0; i < _maxConnection; ++i)
+        }
+        public void Start_Client(string ip, int port, bool isRecoonnect)
+        {
+            asyncSocket.StartClient(ip, port, isRecoonnect);
+        }
+        private void InitializePool(int maxConnection)
+        {
+            bufferMgr = new BufferManager(maxConnection * bufferSize * 2, bufferSize);
+
+            receiveEventPool = new SocketAsyncEventArgsPool(maxConnection);
+            sendEventPool = new SocketAsyncEventArgsPool(maxConnection);
+
+            for (int i = 0; i < maxConnection; ++i)
             {
+                NetToken token = new NetToken();
                 //recive Pool
                 SocketAsyncEventArgs receive = new SocketAsyncEventArgs();
-                NetToken token = new NetToken();
-
                 bufferMgr.SetBuffer(receive);
 
                 receive.UserToken = token;
-                receive.Completed += socket.ReceiveAsync;
+                receive.Completed += asyncSocket.ReceiveComplete;
                 receiveEventPool.PushPool(receive);
 
                 //send Pool
@@ -101,7 +105,7 @@ namespace NetLib
                 bufferMgr.SetBuffer(send);
 
                 send.UserToken = token;
-                send.Completed += socket.SendAsync;
+                send.Completed += asyncSocket.SendCompate;
                 sendEventPool.PushPool(send);
             }
         }
@@ -115,7 +119,9 @@ namespace NetLib
 
             NetToken token = receiveArgs.UserToken as NetToken;
 
-            token.Init(e.AcceptSocket, receiveArgs, sendArgs);
+            AsyncSocket asyncSocket = new AsyncSocket();
+            asyncSocket.SetSocket(e.AcceptSocket);
+            token.Init(asyncSocket, receiveArgs, sendArgs);
 
             OnAccept?.Invoke(token);
 
@@ -136,56 +142,63 @@ namespace NetLib
                 logger?.Warn("Fail Connect Server, SocketError : {0}, Remote EndPoint : {1}", e.SocketError, e.RemoteEndPoint);
                 Thread.Sleep(10000);
 
-                if (socket.ReConnectClient() == false)
+                if (asyncSocket.ReConnectClient() == false)
                 {
                     logger?.Error("Not Found Remote Connect Info");
                     return;
                 }
 
-                OnConnect?.Invoke(socket.SocketState, null);
+                OnConnect?.Invoke(asyncSocket.SocketState, null);
 
                 return;
             }
 
-            SocketAsyncEventArgs receiveArgs = new SocketAsyncEventArgs();
-            receiveArgs.Completed += socket.ReceiveAsync;
-            byte[] receiveBuffer = new byte[65535];
-            receiveArgs.SetBuffer(receiveBuffer, 0, receiveBuffer.Length);
-
-            SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs();
-            sendArgs.Completed += socket.SendAsync;
-            byte[] sendBuffer = new byte[65535];
-            receiveArgs.SetBuffer(sendBuffer, 0, sendBuffer.Length);
+            Func<SocketAsyncEventArgs> createEventArgsFunc = () =>
+            {
+                SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+                byte[] buffer = new byte[bufferSize];
+                args.SetBuffer(buffer, 0, buffer.Length);
+                return args;
+            };
 
             netToken = new NetToken();
-            receiveArgs.UserToken = netToken;
+
+            SocketAsyncEventArgs sendArgs = createEventArgsFunc();
+            sendArgs.Completed += asyncSocket.SendCompate;
             sendArgs.UserToken = netToken;
 
-            netToken.Init(socket.Socket, receiveArgs, sendArgs);
+            SocketAsyncEventArgs recvArgs = createEventArgsFunc();
+            recvArgs.UserToken = netToken;
+            recvArgs.Completed += asyncSocket.ReceiveComplete;
+
+            netToken.Init(asyncSocket, recvArgs, sendArgs);
             netToken.Receive();
 
-            OnConnect?.Invoke(socket.SocketState, netToken);
+            OnConnect?.Invoke(asyncSocket.SocketState, netToken);
         }
 
-        public void ReceiveComplete(SocketAsyncEventArgs e)
+        private void ReceiveComplete(SocketAsyncEventArgs e)
         {
             var data = e.UserToken as NetToken;
             if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
             {
                 if (OnReceive == null)
                 {
-                    logger?.Error("error not found OnReceive Func");                    
+                    logger?.Error("error not found OnReceive Func");
                     return;
                 }
 
                 var outputStream = data.ReceiveStream();
-
                 if (outputStream != null)
                 {
                     OnReceive?.Invoke(data.GetUserToken(), outputStream.GetBuffer());
                 }
 
-                data.Receive();
+                if (data.Receive() == false)
+                {
+                    OnDisConnect?.Invoke(data);
+                    return;
+                }
             }
             else
             {
@@ -193,18 +206,23 @@ namespace NetLib
             }
         }
 
-        public void SendComplete(SocketAsyncEventArgs e)
+        private void SendComplete(SocketAsyncEventArgs e)
         {
             var data = e.UserToken as NetToken;
+            if (data == null)
+            {
+                Console.WriteLine("error SendComplete NetToken casting");
+                return;
+            }
             data.SendDequeue();
         }
 
         #endregion
 
         //클라이언트 -> 서버 패킷 전송 함수
-        public void SendPacket(byte[] _sendBuffer)
+        public void SendPacket(byte[] sendBuffer)
         {
-            netToken.SendPacket(_sendBuffer);
+            netToken.SendPacket(sendBuffer);
         }
 
         public void Update(double deltaTime)
@@ -224,12 +242,12 @@ namespace NetLib
 
         public SocketError GetSocketState()
         {
-            if (socket == null)
+            if (asyncSocket == null)
             {
                 return SocketError.SocketError;
             }
 
-            return socket.SocketState;
+            return asyncSocket.SocketState;
         }
     }
 }

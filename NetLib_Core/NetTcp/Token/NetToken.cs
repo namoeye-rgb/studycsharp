@@ -7,7 +7,7 @@ namespace NetLib.Token
 {
     public class NetToken : IToken
     {
-        private Socket socket;
+        private AsyncSocket asyncSocket;
         private SocketAsyncEventArgs receiveArgs;
         private SocketAsyncEventArgs sendArgs;
         private Queue<byte[]> sendQueue = new Queue<byte[]>();
@@ -19,7 +19,7 @@ namespace NetLib.Token
         {
             get
             {
-                return socket;
+                return asyncSocket.Socket;
             }
         }
 
@@ -39,16 +39,16 @@ namespace NetLib.Token
             }
         }
 
-        public void Init(Socket _socket, SocketAsyncEventArgs _receive, SocketAsyncEventArgs _send)
+        public void Init(AsyncSocket socket, SocketAsyncEventArgs receive, SocketAsyncEventArgs send)
         {
-            socket = _socket;
-            receiveArgs = _receive;
-            sendArgs = _send;
+            this.asyncSocket = socket;
+            receiveArgs = receive;
+            sendArgs = send;
         }
 
         public void Close()
         {
-            socket.Close();
+            asyncSocket.Socket.Close();
         }
 
         public void SetUserToken(IUserToken token)
@@ -64,15 +64,18 @@ namespace NetLib.Token
 
         #region 실제 패킷 처리 함수
 
-        public void Receive()
+        public bool Receive()
         {
             try
             {
-                socket?.ReceiveAsync(receiveArgs);
+                asyncSocket.ReceiveAsync(receiveArgs);
+                return true;
             }
             catch (Exception e)
             {
+                asyncSocket?.Socket.Close();
                 Console.WriteLine(e.ToString());
+                return false;
             }
         }
 
@@ -86,25 +89,20 @@ namespace NetLib.Token
             return null;
         }
 
-        public void Ready_Send()
-        {
-            socket?.SendAsync(sendArgs);
-        }
-
         //Send Packet
-        public void SendPacket(byte[] _buffer)
+        public void SendPacket(byte[] buffer)
         {
             lock (sendQueueObj)
             {
 
                 if (sendQueue.Count <= 0)
                 {
-                    sendQueue.Enqueue(_buffer);
+                    sendQueue.Enqueue(buffer);
                     StartSend();
                     return;
                 }
 
-                sendQueue.Enqueue(_buffer);
+                sendQueue.Enqueue(buffer);
             }
         }
 
@@ -119,7 +117,8 @@ namespace NetLib.Token
             {
                 var data = sendQueue.Peek();
                 sendArgs.SetBuffer(data, 0, data.Length);
-                socket.SendAsync(sendArgs);
+
+                asyncSocket.SendAsync(sendArgs);
             }
         }
 
@@ -127,12 +126,11 @@ namespace NetLib.Token
         {
             lock (sendQueueObj)
             {
-                sendQueue.Dequeue();
-            }
-
-            if (sendQueue.Count > 0)
-            {
-                StartSend();
+                if (sendQueue.Count > 0)
+                {
+                    sendQueue.Dequeue();
+                    StartSend();
+                }
             }
         }
 

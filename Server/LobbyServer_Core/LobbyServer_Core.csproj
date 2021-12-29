@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <ApplicationIcon />
+    <OutputType>Exe</OutputType>
+    <StartupObject />
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NetLib_Core\NetLib_Core.csproj" />
+    <ProjectReference Include="..\..\PacketLib_Core\PacketLib_Core.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -6,9 +6,9 @@ namespace NetLib
 {
     public partial class AsyncSocket
     {
-        public void StartServer(int _port, int _listenCount)
+        public void StartServer(int port, int listenCount)
         {
-            IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, _port);
+            IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, port);
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             SocketAsyncEventArgs args = new SocketAsyncEventArgs();
@@ -16,7 +16,7 @@ namespace NetLib
 
             try {
                 socket.Bind(localEndPoint);
-                socket.Listen(_listenCount);
+                socket.Listen(listenCount);
                 socket.AcceptAsync(args);
 
             } catch (Exception e) {
@@ -27,7 +27,7 @@ namespace NetLib
 
         public void AcceptComplete(object sender, SocketAsyncEventArgs e)
         {
-            AcceptClient?.Invoke(e);
+            AcceptClientCallback?.Invoke(e);
             e.AcceptSocket = null;
             socket.AcceptAsync(e);
         }

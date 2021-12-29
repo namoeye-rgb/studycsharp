@@ -17,13 +17,6 @@ namespace NetLib
             currentIndex = 0;
             bufferSize = size;
             freeIndexPool = new Stack<int>();
-
-            InitBuffer();
-        }
-
-        public void InitBuffer()
-        {
-            //하나의 큰 걸 나누어서 각각 SocketAsyncEventArg의 Object에서 나눠서 사용한다
             buffer = new byte[numBytes];
         }
 

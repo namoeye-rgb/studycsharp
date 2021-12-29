@@ -9,11 +9,12 @@ namespace NetLib
         private IPEndPoint RemoteEP;
 
         private bool isReconnect;
-        public void StartClient(string _ip, int _port, bool _isReceonnect)
+        public void StartClient(string ip, int port, bool isReceonnect)
         {
-            try {
-                var ipAddress = IPAddress.Parse(_ip);
-                RemoteEP = new IPEndPoint(ipAddress, _port);
+            try
+            {
+                var ipAddress = IPAddress.Parse(ip);
+                RemoteEP = new IPEndPoint(ipAddress, port);
 
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
@@ -23,9 +24,11 @@ namespace NetLib
 
                 socket.ConnectAsync(args);
 
-                isReconnect = _isReceonnect;
+                isReconnect = isReceonnect;
 
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 SocketState = SocketError.SocketError;
                 Console.WriteLine(e.ToString());
             }
@@ -43,6 +46,8 @@ namespace NetLib
                 return false;
             }
 
+            socket?.Close();
+
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             SocketAsyncEventArgs args = new SocketAsyncEventArgs();
@@ -56,7 +61,7 @@ namespace NetLib
         public void ConnectComplete(object sender, SocketAsyncEventArgs e)
         {
             SocketState = e.SocketError;
-            ConnectServer?.Invoke(e);
+            ServerConnectCallback?.Invoke(e);
         }
     }
 }
