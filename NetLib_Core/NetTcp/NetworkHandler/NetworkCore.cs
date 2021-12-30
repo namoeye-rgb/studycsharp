@@ -125,9 +125,11 @@ namespace NetLib
 
             NetToken token = receiveArgs.UserToken as NetToken;
 
-            AsyncSocket asyncSocket = new AsyncSocket();
-            asyncSocket.SetSocket(e.AcceptSocket);
-            token.Init(asyncSocket, receiveArgs, sendArgs);
+            AsyncSocket socket = new AsyncSocket();
+            socket.ReceiveCompleteCallback = asyncSocket.ReceiveCompleteCallback;
+            socket.SendCompleteCallback = asyncSocket.SendCompleteCallback;
+            socket.SetSocket(e.AcceptSocket);
+            token.Init(socket, receiveArgs, sendArgs);
 
             OnAccept?.Invoke(token);
 
@@ -137,7 +139,7 @@ namespace NetLib
             //여기서 token을 모으는 이유는 서버에서 클라로 연결을 위함이다.
             token.Receive();
 
-            logger?.Debug("Client Accept : {0}", e.AcceptSocket.RemoteEndPoint);
+            logger?.Debug($"Client Accept : {e.AcceptSocket.RemoteEndPoint}");
         }
 
         //클라이언트 용
@@ -175,8 +177,8 @@ namespace NetLib
             sendArgs.UserToken = netToken;
 
             SocketAsyncEventArgs recvArgs = createEventArgsFunc();
-            recvArgs.UserToken = netToken;
             recvArgs.Completed += asyncSocket.ReceiveComplete;
+            recvArgs.UserToken = netToken;
 
             netToken.Init(asyncSocket, recvArgs, sendArgs);
             netToken.Receive();
@@ -198,7 +200,9 @@ namespace NetLib
                 netToken.ReceiveByteBuffer((id, bytes) =>
                 {
                     OnReceive?.Invoke(netToken, id, bytes);
-                    packetHandler?.CallPacketHandlerMethod(netToken, id, bytes);
+                    var packet = packetHandler?.GetPacket(id, bytes);
+                    var handlerMethod = packetHandler.GetMethodInfo(id);
+                    handlerMethod?.Invoke(null, new object[] { netToken, packet });
 
                 }, e);
 

@@ -1,4 +1,6 @@
-﻿namespace NetLib
+﻿using Google.Protobuf;
+
+namespace NetLib
 {
     public interface IPacketHeader
     {
@@ -6,4 +8,16 @@
         ulong UniqueRequestId { get; }
         ulong AcknowledgedId { get; }
     }
+
+    public interface INetSession
+    {
+        void SendPacket<T>(T sendPacket) where T : IMessage;
+        void Close();
+    }
+
+    public interface IUser
+    {
+        string GetUserID();
+    }
+
 }

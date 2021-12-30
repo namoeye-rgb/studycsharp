@@ -5,6 +5,7 @@ using Packet.Login;
 using System;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Threading;
 
 namespace ClientTool
 {
@@ -62,39 +63,45 @@ namespace ClientTool
 
         static NetToken netClient;
 
+
         public class PacketReceiveHandler
         {
             public static void OnReceiveHandler(INetSession user, SC_Packet_Login packet)
             {
-                int b = 0;
+                tempLogger.Debug($"Echo : {packet.UserID}");
             }
         }
 
+        static ConsoleLogger tempLogger;
+        static int count = 0;
         static void Main(string[] args)
         {
-            ConsoleLogger tempLogger = new ConsoleLogger();
+            tempLogger = new ConsoleLogger();
             NetworkCore netWork = new NetworkCore(NET_TYPE.Server, tempLogger);
             netWork.Init_Client(OnConnect_CallBack, OnReceive_CallBack, OnDisConnect_CallBack);
             netWork.Init_PacketHandler(Assembly.GetExecutingAssembly(), nameof(PacketReceiveHandler));
-            Console.WriteLine("Start Client");
+            tempLogger.Debug("Start Client");
             netWork.Start_Client("127.0.0.1", 8080, true);
 
-
+            Thread.Sleep(5000);
 
             while (true)
             {
-                var keyInfo = Console.ReadKey();
-                if (keyInfo.KeyChar == 'H')
+                //var keyInfo = Console.ReadKey();
+                //if (keyInfo.KeyChar == 'H')
+                Thread.Sleep(10);
                 {
                     CS_Packet_Login t = new CS_Packet_Login();
                     t.LoginType = LoginType.Google;
-                    t.Name = "testName";
+                    count++;
+                    t.Name = $"testName : {count}";
 
                     netClient.SendPacket(t);
+                    tempLogger.Debug($"[Client] Send CS_Packet_Login {count}");
                 }
             }
 
-            Console.WriteLine("Hello World!");
+            tempLogger.Debug("Hello World!");
         }
 
     }

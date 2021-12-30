@@ -49,7 +49,7 @@ namespace NetLib.Token
             receiveArgs = receive;
             sendArgs = send;
 
-            myBuffer = new byte[receive.Buffer.Length];
+            myBuffer = new byte[receive.Count];
         }
 
         public void Close()
@@ -84,7 +84,7 @@ namespace NetLib.Token
 
             try
             {
-                Array.Copy(e.Buffer, e.Offset, myBuffer, curPos, e.Buffer.Length - e.Offset);
+                Array.Copy(e.Buffer, e.Offset, myBuffer, curPos, e.BytesTransferred);
                 //현재 위치를 받은 만큼 움직입니다
                 curPos += e.BytesTransferred;
 

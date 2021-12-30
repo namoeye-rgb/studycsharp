@@ -28,6 +28,7 @@ namespace PacketLib_Core
 
         public void Initialize(ILogger logger, Assembly excuteAssembly, string packetHandlerClassName)
         {
+            this.logger = logger;
             if (packetHandlerClassName.Length <= 0)
             {
                 logger.Error("not found packetHandlerFuncName");
@@ -103,22 +104,27 @@ namespace PacketLib_Core
             return packetTypeIDMap[packetType];
         }
 
-        public void CallPacketHandlerMethod(INetSession session, short id, byte[] buffer)
+        public IMessage GetPacket(short id, byte[] buffer)
         {
             if (handlerFuncMap.ContainsKey(id) == false)
             {
                 logger.Error($"not found handlerFuncMap id : {id}");
-                return;
+                return null;
             }
 
             var msg = packetInstanceMap[id];
             var packet = msg.Descriptor.Parser.ParseFrom(buffer);
+            return packet;
+        }
 
-            handlerFuncMap[id].Invoke(null, new object[]
+        public MethodInfo GetMethodInfo(short id)
+        {
+            if (handlerFuncMap.ContainsKey(id) == false)
             {
-                session,
-                packet
-            });
+                return null;
+            }
+
+            return handlerFuncMap[id];
         }
 
         public static byte[] GetPacketToBytes<T>(T packet) where T : IMessage

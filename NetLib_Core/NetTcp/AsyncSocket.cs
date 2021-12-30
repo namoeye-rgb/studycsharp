@@ -57,6 +57,10 @@ namespace NetLib
             {
                 ReceiveCompleteCallback?.Invoke(e);
             }
+            else
+            {
+                int a = 0;
+            }
         }
 
         public void SendCompate(object sender, SocketAsyncEventArgs e)

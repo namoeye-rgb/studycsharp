@@ -4,6 +4,7 @@ using NetLib.Token;
 using Packet.Login;
 using PacketLib_Core;
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
@@ -51,6 +52,7 @@ namespace LobbyServer_Core
             }
         }
 
+        public static NetToken client;
 
         public static void OnAccept_CallBack(NetToken nettoken)
         {
@@ -76,15 +78,21 @@ namespace LobbyServer_Core
         {
             public static void OnReceiveHandler(INetSession user, CS_Packet_Login packet)
             {
-                int b = 0;
+
+                SC_Packet_Login sc = new SC_Packet_Login();
+                sc.UserID = packet.Name;
+                user.SendPacket(sc);
+
+                tempLogger.Debug($"[Server] Receive CS_Packet_Login {packet.Name}");
             }
         }
 
         static volatile bool exit = false;
+        static ConsoleLogger tempLogger;
 
         static void Main(string[] args)
         {
-            ConsoleLogger tempLogger = new ConsoleLogger();
+            tempLogger = new ConsoleLogger();
 
             NetworkCore netWork = new NetworkCore(NET_TYPE.Server, tempLogger);
             netWork.Init_Server(3,
