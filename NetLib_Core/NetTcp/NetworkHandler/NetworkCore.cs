@@ -1,4 +1,5 @@
-﻿using NetLib.Token;
+﻿using CommonLib_Core;
+using NetLib.Token;
 using System;
 using System.Net.Sockets;
 using System.Threading;
@@ -13,7 +14,7 @@ namespace NetLib
 
     public partial class NetworkCore
     {
-        private INetLogger logger;
+        private ILogger logger;
         public NET_TYPE NetType { get; }
 
         //Common
@@ -36,7 +37,7 @@ namespace NetLib
         public OnReceive_CallBack OnReceive;
         public OnDisConnect_CallBack OnDisConnect;
 
-        public NetworkCore(NET_TYPE type, INetLogger logger = null)
+        public NetworkCore(NET_TYPE type, ILogger logger = null)
         {
             asyncSocket = new AsyncSocket();
             NetType = type;

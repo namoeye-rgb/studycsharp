@@ -92,49 +92,56 @@ namespace NetLib.Token
                 return;
             }
 
-            Array.Copy(e.Buffer, e.Offset, myBuffer, curPos, e.Buffer.Length - e.Offset);
-            //현재 위치를 받은 만큼 움직입니다
-            curPos += e.BytesTransferred;
-
-            int remainLength = curPos;
-            int readPos = 0;
-            while (true)
+            try
             {
-                //현재 위치가 헤더 사이즈보다 작으면 그냥 다음 또 받기위해 리턴
-                if (remainLength < PacketHandler.HEADER_SIZE)
+                Array.Copy(e.Buffer, e.Offset, myBuffer, curPos, e.Buffer.Length - e.Offset);
+                //현재 위치를 받은 만큼 움직입니다
+                curPos += e.BytesTransferred;
+
+                int remainLength = curPos;
+                int readPos = 0;
+                while (true)
                 {
-                    break;
+                    //현재 위치가 헤더 사이즈보다 작으면 그냥 다음 또 받기위해 리턴
+                    if (remainLength < PacketConst.HEADER_SIZE)
+                    {
+                        break;
+                    }
+
+                    //0000 0000 | 0000 0000 / 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 /
+                    //        id(2byte)     /                 body(4byte)                   /
+                    int bodySize = BitConverter.ToInt32(myBuffer, PacketConst.ID_SIZE);
+                    //헤더 + 바디사이즈 길이 > 현재 위치값 보다 크면 다시 또 받기위해 return
+                    //하나의 정사이즈가 최소한 들어와야 다음 처리를 한다는 의미
+                    var packetSize = PacketConst.HEADER_SIZE + bodySize;
+                    if (packetSize > curPos)
+                    {
+                        break;
+                    }
+
+                    using (MemoryStream ms = new MemoryStream(packetSize))
+                    {
+                        //id를 가져오고
+                        ms.Write(myBuffer, 0, PacketConst.ID_SIZE);
+                        //몸통 가져오고
+                        ms.Write(myBuffer, PacketConst.HEADER_SIZE, bodySize);
+                        ms.Flush();
+
+                        //하나의 패킷 데이터를 온전히 가져온다
+                        onReceiveCallback(GetUserToken(), ms.GetBuffer());
+
+                    };
+
+                    //여기서 myBuff를 손보긴 해야함
+                    Array.Clear(myBuffer, readPos, packetSize);
+                    readPos += packetSize;
+                    remainLength -= packetSize;
+                    curPos -= packetSize;
                 }
-
-                //0000 0000 | 0000 0000 / 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 /
-                //        id(2byte)     /                 body(4byte)                   /
-                int bodySize = BitConverter.ToInt32(myBuffer, PacketHandler.ID_SIZE);
-                //헤더 + 바디사이즈 길이 > 현재 위치값 보다 크면 다시 또 받기위해 return
-                //하나의 정사이즈가 최소한 들어와야 다음 처리를 한다는 의미
-                var packetSize = PacketHandler.HEADER_SIZE + bodySize;
-                if (packetSize > curPos)
-                {
-                    break;
-                }
-
-                using (MemoryStream ms = new MemoryStream(packetSize))
-                {
-                    //id를 가져오고
-                    ms.Write(myBuffer, 0, PacketHandler.ID_SIZE);
-                    //몸통 가져오고
-                    ms.Write(myBuffer, PacketHandler.HEADER_SIZE, bodySize);
-                    ms.Flush();
-
-                    //하나의 패킷 데이터를 온전히 가져온다
-                    onReceiveCallback(GetUserToken(), ms.GetBuffer());
-
-                };
-
-                //여기서 myBuff를 손보긴 해야함
-                Array.Clear(myBuffer, readPos, packetSize);
-                readPos += packetSize;
-                remainLength -= packetSize;
-                curPos -= packetSize;
+            }
+            finally
+            {
+                Array.Clear(e.Buffer, e.Offset, e.BytesTransferred);
             }
         }
 

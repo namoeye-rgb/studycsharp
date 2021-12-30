@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\CommonLib_Core\CommonLib_Core.csproj" />
     <ProjectReference Include="..\..\NetLib_Core\NetLib_Core.csproj" />
     <ProjectReference Include="..\..\PacketLib_Core\PacketLib_Core.csproj" />
   </ItemGroup>

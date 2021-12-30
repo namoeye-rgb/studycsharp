@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommonLib_Core\CommonLib_Core.csproj" />
-    <ProjectReference Include="..\PacketLib_Core\PacketLib_Core.csproj" />
+    <ProjectReference Include="..\NetLib_Core\NetLib_Core.csproj" />
   </ItemGroup>
 
 </Project>

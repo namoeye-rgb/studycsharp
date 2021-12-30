@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CommonLib_Core\CommonLib_Core.csproj" />
     <ProjectReference Include="..\UtilLib_Core\UtilLib_Core.csproj" />
   </ItemGroup>
 
