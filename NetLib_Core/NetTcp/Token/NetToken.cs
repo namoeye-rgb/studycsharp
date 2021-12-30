@@ -110,7 +110,7 @@ namespace NetLib.Token
                     }
 
                     byte[] packetBuffer = new byte[bodySize];
-                    Array.Copy(myBuffer, readPos, packetBuffer, 0, bodySize);
+                    Array.Copy(myBuffer, readPos + PacketConst.HEADER_SIZE, packetBuffer, 0, bodySize);
                     var id = BitConverter.ToInt16(myBuffer, 0);
                     //하나의 패킷 데이터를 온전히 가져온다
                     onReceiveCallback(id, packetBuffer);

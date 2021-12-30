@@ -22,6 +22,7 @@ namespace PacketLib_Core
         private static Dictionary<short, Type> packetIDTypeMap = new Dictionary<short, Type>();
         private static Dictionary<Type, short> packetTypeIDMap = new Dictionary<Type, short>();
         private static Dictionary<short, MethodInfo> handlerFuncMap = new Dictionary<short, MethodInfo>();
+        private static Dictionary<short, IMessage> packetInstanceMap = new Dictionary<short, IMessage>();
 
         private ILogger logger;
 
@@ -59,6 +60,9 @@ namespace PacketLib_Core
 
                 packetIDTypeMap.Add(id, classType);
                 packetTypeIDMap.Add(classType, id);
+
+                var msg = (IMessage)Activator.CreateInstance(classType);
+                packetInstanceMap.Add(id, msg);
             }
 
             //HandlerMethods Find
@@ -107,12 +111,13 @@ namespace PacketLib_Core
                 return;
             }
 
-            var type = packetIDTypeMap[id];
+            var msg = packetInstanceMap[id];
+            var packet = msg.Descriptor.Parser.ParseFrom(buffer);
 
             handlerFuncMap[id].Invoke(null, new object[]
             {
                 session,
-                buffer
+                packet
             });
         }
 
