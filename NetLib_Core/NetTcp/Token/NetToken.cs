@@ -1,4 +1,6 @@
-﻿using PacketLib_Core;
+﻿using CommonLib_Core;
+using Google.Protobuf;
+using PacketLib_Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,16 +8,14 @@ using System.Net.Sockets;
 
 namespace NetLib.Token
 {
-    public class NetToken : IToken
+    public class NetToken : IToken, INetSession
     {
         private AsyncSocket asyncSocket;
         private SocketAsyncEventArgs receiveArgs;
         private SocketAsyncEventArgs sendArgs;
         private Queue<byte[]> sendQueue = new Queue<byte[]>();
         private object sendQueueObj = new object();
-        private IUserToken userToken;
-        private PacketHandler packetHandler;
-
+        private IUser user;
         private byte[] myBuffer;
         private int curPos;
 
@@ -57,16 +57,6 @@ namespace NetLib.Token
             asyncSocket.Socket.Close();
         }
 
-        public void SetUserToken(IUserToken token)
-        {
-            userToken = token;
-        }
-
-        public IUserToken GetUserToken()
-        {
-            return userToken;
-        }
-
 
         #region 실제 패킷 처리 함수
 
@@ -85,7 +75,7 @@ namespace NetLib.Token
             }
         }
 
-        public void ReceiveByteBuffer(Action<IUserToken, byte[]> onReceiveCallback, SocketAsyncEventArgs e)
+        public void ReceiveByteBuffer(Action<short, byte[]> onReceiveCallback, SocketAsyncEventArgs e)
         {
             if (e.BytesTransferred < 0)
             {
@@ -119,18 +109,11 @@ namespace NetLib.Token
                         break;
                     }
 
-                    using (MemoryStream ms = new MemoryStream(packetSize))
-                    {
-                        //id를 가져오고
-                        ms.Write(myBuffer, 0, PacketConst.ID_SIZE);
-                        //몸통 가져오고
-                        ms.Write(myBuffer, PacketConst.HEADER_SIZE, bodySize);
-                        ms.Flush();
-
-                        //하나의 패킷 데이터를 온전히 가져온다
-                        onReceiveCallback(GetUserToken(), ms.GetBuffer());
-
-                    };
+                    byte[] packetBuffer = new byte[bodySize];
+                    Array.Copy(myBuffer, readPos, packetBuffer, 0, bodySize);
+                    var id = BitConverter.ToInt16(myBuffer, 0);
+                    //하나의 패킷 데이터를 온전히 가져온다
+                    onReceiveCallback(id, packetBuffer);
 
                     //여기서 myBuff를 손보긴 해야함
                     Array.Clear(myBuffer, readPos, packetSize);
@@ -145,8 +128,16 @@ namespace NetLib.Token
             }
         }
 
+
+        //클라이언트 -> 서버 패킷 전송 함수
+        public void SendPacket<T>(T sendPacket) where T : IMessage
+        {
+            var packetBuffer = PacketHandler.GetPacketToBytes(sendPacket);
+            SendPacket(packetBuffer);
+        }
+
         //Send Packet
-        public void SendPacket(byte[] buffer)
+        private void SendPacket(byte[] buffer)
         {
             lock (sendQueueObj)
             {
@@ -172,6 +163,7 @@ namespace NetLib.Token
             lock (sendQueueObj)
             {
                 var data = sendQueue.Peek();
+                //TODO : 현재 버퍼 사이즈인 65536 이상일 경우 문제가 생기므로 추후 수정
                 sendArgs.SetBuffer(sendArgs.Offset, data.Length);
                 Array.Copy(data, 0, sendArgs.Buffer, sendArgs.Offset, data.Length);
 
@@ -189,6 +181,11 @@ namespace NetLib.Token
                     StartSend();
                 }
             }
+        }
+
+        public IUser GetUser()
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

@@ -9,10 +9,4 @@ namespace NetLib.Token
         SocketAsyncEventArgs SendArgs { get; }
     }
 
-    public interface IUserToken
-    {
-        void SendPacket<T>(T _packet);
-        void ReceiveBuffer(IUserToken _userToken, byte[] _buffer);
-        void Close();
-    }
 }

@@ -1,9 +1,11 @@
 ﻿using CommonLib_Core;
 using NetLib;
 using NetLib.Token;
+using Packet.Login;
 using PacketLib_Core;
 using System;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using static NetLib.NetworkCore;
@@ -12,6 +14,9 @@ namespace LobbyServer_Core
 {
     class Program
     {
+
+
+
         //테스트용 임시 로거
         public class ConsoleLogger : ILogger
         {
@@ -52,7 +57,7 @@ namespace LobbyServer_Core
 
         }
 
-        public static void OnReceive_CallBack(IUserToken userToken, byte[] buffer)
+        public static void OnReceive_CallBack(INetSession netSession, short id, byte[] buffer)
         {
 
         }
@@ -67,44 +72,49 @@ namespace LobbyServer_Core
 
         }
 
+        public class PacketReceiveHandler
+        {
+            public static void OnReceiveHandler(INetSession user, CS_Packet_Login packet)
+            {
+                int b = 0;
+            }
+        }
+
         static volatile bool exit = false;
 
         static void Main(string[] args)
         {
             ConsoleLogger tempLogger = new ConsoleLogger();
 
-            PacketHandler handler = new PacketHandler();
-            handler.Initialize(tempLogger);
+            NetworkCore netWork = new NetworkCore(NET_TYPE.Server, tempLogger);
+            netWork.Init_Server(3,
+                OnAccept_CallBack,
+                OnConnect_CallBack,
+                OnReceive_CallBack,
+                OnDisConnect_CallBack);
+            netWork.Init_PacketHandler(Assembly.GetExecutingAssembly(), nameof(PacketReceiveHandler));
 
-            
-            //NetworkCore netWork = new NetworkCore(NET_TYPE.Server, tempLogger);
-            //netWork.Init_Server(3,
-            //    OnAccept_CallBack,
-            //    OnConnect_CallBack,
-            //    OnReceive_CallBack,
-            //    OnDisConnect_CallBack);
-
-            //Console.WriteLine("Start Server");
-            //netWork.Start_Server(8080, 100);
+            Console.WriteLine("Start Server");
+            netWork.Start_Server(8080, 100);
 
 
-            //while (!exit)
-            //{
-            //    netWork.Update(0);
-            //    Task.Factory.StartNew(() =>
-            //    {
-            //        while (Console.ReadKey().Key != ConsoleKey.Q) ;
-            //        exit = true;
-            //    });
+            while (!exit)
+            {
+                netWork.Update(0);
+                Task.Factory.StartNew(() =>
+                {
+                    while (Console.ReadKey().Key != ConsoleKey.Q) ;
+                    exit = true;
+                });
 
-            //    if (exit)
-            //    {
-            //        Console.WriteLine("Server Out");
-            //        break;
-            //    }
+                if (exit)
+                {
+                    Console.WriteLine("Server Out");
+                    break;
+                }
 
-            //    Thread.Sleep(1000);
-            //}
+                Thread.Sleep(1000);
+            }
         }
     }
 }

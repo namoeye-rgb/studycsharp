@@ -2,6 +2,17 @@
 
 namespace CommonLib_Core
 {
+    public interface IUser
+    {
+        string GetUserID();
+    }
+
+    public interface INetSession
+    {
+        IUser GetUser();
+        void Close();
+    }
+
     public interface ILogger
     {
         void Debug(string logMessage, params object[] logParams);

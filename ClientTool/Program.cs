@@ -4,6 +4,7 @@ using NetLib.Token;
 using Packet.Login;
 using System;
 using System.Net.Sockets;
+using System.Reflection;
 
 namespace ClientTool
 {
@@ -44,14 +45,14 @@ namespace ClientTool
         }
 
 
-        public static void OnReceive_CallBack(IUserToken userToken, byte[] buffer)
+        public static void OnReceive_CallBack(INetSession session, short id, byte[] buffer)
         {
 
         }
 
         public static void OnConnect_CallBack(SocketError socketState, NetToken netToken)
         {
-
+            netClient = netToken;
         }
 
         public static void OnDisConnect_CallBack(NetToken netToken)
@@ -59,35 +60,37 @@ namespace ClientTool
 
         }
 
+        static NetToken netClient;
+
+        public class PacketReceiveHandler
+        {
+            public static void OnReceiveHandler(INetSession user, SC_Packet_Login packet)
+            {
+                int b = 0;
+            }
+        }
+
         static void Main(string[] args)
         {
             ConsoleLogger tempLogger = new ConsoleLogger();
             NetworkCore netWork = new NetworkCore(NET_TYPE.Server, tempLogger);
             netWork.Init_Client(OnConnect_CallBack, OnReceive_CallBack, OnDisConnect_CallBack);
-
+            netWork.Init_PacketHandler(Assembly.GetExecutingAssembly(), nameof(PacketReceiveHandler));
             Console.WriteLine("Start Client");
             netWork.Start_Client("127.0.0.1", 8080, true);
 
-            byte[] b = new byte[1];
-            b[0] = 1;
 
-            byte cnt = 1;
 
             while (true)
             {
                 var keyInfo = Console.ReadKey();
                 if (keyInfo.KeyChar == 'H')
                 {
-                    byte[] nb = new byte[cnt];                                        
-                    nb[cnt - 1] = cnt;
-                    cnt++;
+                    CS_Packet_Login t = new CS_Packet_Login();
+                    t.LoginType = LoginType.Google;
+                    t.Name = "testName";
 
-                    if (cnt == 3)
-                    {
-                        cnt -= 2;
-                    }
-
-                    netWork.SendPacket(nb);
+                    netClient.SendPacket(t);
                 }
             }
 

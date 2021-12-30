@@ -1,7 +1,10 @@
 ﻿using CommonLib_Core;
+using Google.Protobuf;
 using NetLib.Token;
+using PacketLib_Core;
 using System;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading;
 
 namespace NetLib
@@ -19,16 +22,17 @@ namespace NetLib
 
         //Common
         private AsyncSocket asyncSocket;
+        private PacketHandler packetHandler;
 
         //Client
         private NetToken netToken;
-        private int bufferSize = 10;
+        private int bufferSize = 65535;
         private BufferManager bufferMgr;
         private SocketAsyncEventArgsPool receiveEventPool;
         private SocketAsyncEventArgsPool sendEventPool;
 
         public delegate void OnAccept_CallBack(NetToken netToken);
-        public delegate void OnReceive_CallBack(IUserToken userToken, byte[] buffer);
+        public delegate void OnReceive_CallBack(INetSession userToken, short id, byte[] buffer);
         public delegate void OnConnect_CallBack(SocketError socketState, NetToken netToken);
         public delegate void OnDisConnect_CallBack(NetToken netToken);
 
@@ -44,6 +48,11 @@ namespace NetLib
             this.logger = logger;
         }
 
+        public void Init_PacketHandler(Assembly excuteAssembly, string packetHandlerClassName)
+        {
+            packetHandler = new PacketHandler();
+            packetHandler.Initialize(logger, excuteAssembly, packetHandlerClassName);
+        }
 
         public void Init_Server(int maxConnection,
             OnAccept_CallBack onAcceptFunc,
@@ -109,8 +118,6 @@ namespace NetLib
             }
         }
 
-        #region 소켓내부에서 Complete되고난 뒤에 처리되는 함수
-        //서버용
         public void AddClient(SocketAsyncEventArgs e)
         {
             SocketAsyncEventArgs receiveArgs = receiveEventPool.PopPool();
@@ -188,9 +195,11 @@ namespace NetLib
                     return;
                 }
 
-                netToken.ReceiveByteBuffer((token, bytes) =>
+                netToken.ReceiveByteBuffer((id, bytes) =>
                 {
-                    OnReceive?.Invoke(token, bytes);
+                    OnReceive?.Invoke(netToken, id, bytes);
+                    packetHandler?.CallPacketHandlerMethod(netToken, id, bytes);
+
                 }, e);
 
                 if (netToken.Receive() == false)
@@ -216,20 +225,12 @@ namespace NetLib
             data.SendDequeue();
         }
 
-        #endregion
-
-        //클라이언트 -> 서버 패킷 전송 함수
-        public void SendPacket(byte[] sendBuffer)
-        {
-            netToken.SendPacket(sendBuffer);
-        }
-
         public void Update(double deltaTime)
         {
 
         }
 
-        public IToken GetNetToken()
+        public NetToken GetNetToken()
         {
             return netToken;
         }
