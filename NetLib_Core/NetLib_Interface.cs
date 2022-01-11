@@ -13,6 +13,7 @@ namespace NetLib
     {
         void SendPacket<T>(T sendPacket) where T : IMessage;
         void Close();
+        void Disconnect();
     }
 
     public interface IUser

@@ -5,25 +5,31 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace NetLib.Token
 {
-    public class NetToken : IToken, INetSession
+    public abstract class Session: IToken, INetSession
     {
-        private AsyncSocket asyncSocket;
+        private Socket socket;
+        private int disconnect = 0;
+
         private SocketAsyncEventArgs receiveArgs;
         private SocketAsyncEventArgs sendArgs;
         private Queue<byte[]> sendQueue = new Queue<byte[]>();
         private object sendQueueObj = new object();
-        private IUser user;
         private byte[] myBuffer;
         private int curPos;
+
+        public abstract void OnConnectedHandler(Session netToken);
+        public abstract void OnRecvHandler(INetSession userToken, short id, byte[] buffer);
+        public abstract void OnDisConnectHandler(Session netToken);
 
         public Socket Socket
         {
             get
             {
-                return asyncSocket.Socket;
+                return socket;
             }
         }
 
@@ -43,9 +49,9 @@ namespace NetLib.Token
             }
         }
 
-        public void Init(AsyncSocket socket, SocketAsyncEventArgs receive, SocketAsyncEventArgs send)
+        public void Init(Socket socket, SocketAsyncEventArgs receive, SocketAsyncEventArgs send)
         {
-            this.asyncSocket = socket;
+            this.socket = socket;
             receiveArgs = receive;
             sendArgs = send;
 
@@ -54,25 +60,15 @@ namespace NetLib.Token
 
         public void Close()
         {
-            asyncSocket.Socket.Close();
+            socket.Close();
         }
 
 
         #region 실제 패킷 처리 함수
 
-        public bool Receive()
+        public void Receive()
         {
-            try
-            {
-                asyncSocket.ReceiveAsync(receiveArgs);
-                return true;
-            }
-            catch (Exception e)
-            {
-                asyncSocket?.Socket.Close();
-                Console.WriteLine(e.ToString());
-                return false;
-            }
+            socket.ReceiveAsync(receiveArgs);
         }
 
         public void ReceiveByteBuffer(Action<short, byte[]> onReceiveCallback, SocketAsyncEventArgs e)
@@ -167,11 +163,11 @@ namespace NetLib.Token
                 sendArgs.SetBuffer(sendArgs.Offset, data.Length);
                 Array.Copy(data, 0, sendArgs.Buffer, sendArgs.Offset, data.Length);
 
-                asyncSocket.SendAsync(sendArgs);
+                socket.SendAsync(sendArgs);
             }
         }
 
-        public void SendDequeue()
+        public void DequeueSend()
         {
             lock (sendQueueObj)
             {
@@ -183,9 +179,15 @@ namespace NetLib.Token
             }
         }
 
-        public IUser GetUser()
+        public void Disconnect()
         {
-            throw new NotImplementedException();
+            if (Interlocked.Exchange(ref disconnect, 1) == 1)
+            {
+                return;
+            }
+
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
         }
 
         #endregion

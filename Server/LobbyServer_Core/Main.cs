@@ -1,7 +1,7 @@
 ﻿using CommonLib_Core;
 using NetLib;
 using NetLib.Token;
-using Packet.Login;
+using Packet_Login;
 using PacketLib_Core;
 using System;
 using System.Collections.Generic;
@@ -9,14 +9,12 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using static NetLib.NetworkCore;
+using static NetLib.NetworkCore_Listener;
 
 namespace LobbyServer_Core
 {
     class Program
     {
-
-
 
         //테스트용 임시 로거
         public class ConsoleLogger : ILogger
@@ -52,9 +50,7 @@ namespace LobbyServer_Core
             }
         }
 
-        public static NetToken client;
-
-        public static void OnAccept_CallBack(NetToken nettoken)
+        public static void OnAccept_CallBack(Session nettoken)
         {
 
         }
@@ -64,14 +60,32 @@ namespace LobbyServer_Core
 
         }
 
-        public static void OnConnect_CallBack(SocketError socketState, NetToken netToken)
+        public static void OnConnect_CallBack(SocketError socketState, Session netToken)
         {
 
         }
 
-        public static void OnDisConnect_CallBack(NetToken netToken)
+        public static void OnDisConnect_CallBack(Session netToken)
         {
 
+        }
+
+        public class GameSession : Session
+        {
+            public override void OnConnectedHandler(Session netToken)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void OnDisConnectHandler(Session netToken)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void OnRecvHandler(INetSession userToken, short id, byte[] buffer)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public class PacketReceiveHandler
@@ -80,7 +94,6 @@ namespace LobbyServer_Core
             {
 
                 SC_Packet_Login sc = new SC_Packet_Login();
-                sc.UserID = packet.Name;
                 user.SendPacket(sc);
 
                 tempLogger.Debug($"[Server] Receive CS_Packet_Login {packet.Name}");
@@ -94,21 +107,20 @@ namespace LobbyServer_Core
         {
             tempLogger = new ConsoleLogger();
 
-            NetworkCore netWork = new NetworkCore(NET_TYPE.Server, tempLogger);
-            netWork.Init_Server(3,
+            var netConfig = new NetworkConfig();
+            netConfig.ListenPort = 8080;
+            netConfig.BackLogCount = 100;
+
+            NetworkCore_Listener listener = new NetworkCore_Listener();
+            listener.Init(netConfig, tempLogger, Assembly.GetExecutingAssembly(), nameof(PacketReceiveHandler), () => { return new GameSession(); });
+            listener.RegisterHandler(
                 OnAccept_CallBack,
-                OnConnect_CallBack,
                 OnReceive_CallBack,
                 OnDisConnect_CallBack);
-            netWork.Init_PacketHandler(Assembly.GetExecutingAssembly(), nameof(PacketReceiveHandler));
-
-            Console.WriteLine("Start Server");
-            netWork.Start_Server(8080, 100);
-
+            listener.Start_Server();
 
             while (!exit)
             {
-                netWork.Update(0);
                 Task.Factory.StartNew(() =>
                 {
                     while (Console.ReadKey().Key != ConsoleKey.Q) ;

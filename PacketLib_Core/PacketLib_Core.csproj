@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="del /q $(SolutionDir)PacketLib_Core\PacketData\&#xD;&#xA;$(SolutionDir)protoc-3.19.1\bin\protoc.exe -I=$(SolutionDir)protoc-3.19.1\bin\data\ --csharp_out=$(SolutionDir)PacketLib_Core\PacketData\ $(SolutionDir)protoc-3.19.1\bin\data\*" />
+    <Exec Command="del /q $(SolutionDir)PacketLib_Core\PacketData\&#xD;&#xA;$(SolutionDir)protoc-3.19.1\bin\protoc.exe -I=$(SolutionDir)protoc-3.19.1\bin\data\ --csharp_out=$(SolutionDir)PacketLib_Core\PacketData $(SolutionDir)protoc-3.19.1\bin\data\*" />
   </Target>
 
 </Project>
